@@ -24,26 +24,31 @@ function docker_config_prune() {
 	done
 }
 
-logfmt 'msg="Starting Promstack housekeeping agent..."'
-
 exec 2>&1
 
-while true; do
-	logfmt 'msg="Schedule housekeeping on Docker config objects in '${HOUSEKEEPING_INTERVAL}' seconds..."'
-	sleep ${HOUSEKEEPING_INTERVAL}
+if [ "$(docker node inspect self --format '{{.ManagerStatus.Leader}}')" != "true" ]; then
+	logfmt 'msg="Promstack housekeeping agent is not running on the Swarm leader node, the agent will sleep forever."'
+	sleep infinity
+else
+	logfmt 'msg="Starting Promstack housekeeping agent..."'
 
-	count=0
+	while true; do
+		logfmt 'msg="Schedule housekeeping on Docker config objects in '${HOUSEKEEPING_INTERVAL}' seconds..."'
+		sleep ${HOUSEKEEPING_INTERVAL}
 
-	docker_config_prune "io.grafana.dashboard=true"
-	docker_config_prune "io.grafana.provisioning.alerting=true"
-	docker_config_prune "io.grafana.provisioning.dashboard=true"
-	docker_config_prune "io.grafana.provisioning.datasource=true"
-	docker_config_prune "io.prometheus.scrape_config=true"
-	docker_config_prune "com.docker.stack.namespace=${DOCKER_STACK_NAMESPACE}"
+		count=0
 
-	if [ $count -gt 0 ]; then
-		logfmt 'msg="Housekeeping done, removed '${count}' Docker config objects."'
-	fi
-done
+		docker_config_prune "io.grafana.dashboard=true"
+		docker_config_prune "io.grafana.provisioning.alerting=true"
+		docker_config_prune "io.grafana.provisioning.dashboard=true"
+		docker_config_prune "io.grafana.provisioning.datasource=true"
+		docker_config_prune "io.prometheus.scrape_config=true"
+		docker_config_prune "com.docker.stack.namespace=${DOCKER_STACK_NAMESPACE}"
+
+		if [ $count -gt 0 ]; then
+			logfmt 'msg="Housekeeping done, removed '${count}' Docker config objects."'
+		fi
+	done
+fi
 
 exit 0
