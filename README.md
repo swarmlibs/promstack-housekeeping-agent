@@ -1,5 +1,5 @@
 # About
-A housekeeping agent for Promstack, remove unused Promstack config objects and Prometheus scrape configs on an interval.
+A housekeeping agent for removing unused/out-dated Promstack config objects and Prometheus scrape configs on an interval.
 
 ## Usage
 
