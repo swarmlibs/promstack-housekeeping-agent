@@ -34,12 +34,12 @@ while true; do
 
 	count=0
 
-	docker_config_prune "com.docker.stack.namespace=${DOCKER_STACK_NAMESPACE}"
-	docker_config_prune "io.prometheus.scrape_config=true"
 	docker_config_prune "io.grafana.dashboard=true"
 	docker_config_prune "io.grafana.provisioning.alerting=true"
 	docker_config_prune "io.grafana.provisioning.dashboard=true"
 	docker_config_prune "io.grafana.provisioning.datasource=true"
+	docker_config_prune "io.prometheus.scrape_config=true"
+	docker_config_prune "com.docker.stack.namespace=${DOCKER_STACK_NAMESPACE}"
 
 	if [ $count -gt 0 ]; then
 		logfmt 'msg="Housekeeping done, removed '${count}' Docker config objects."'
