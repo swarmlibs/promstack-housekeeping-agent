@@ -5,7 +5,7 @@ A housekeeping agent for removing unused/out-dated Promstack, Grafana and Promet
 
 ```yml
 services:
-  promstack-housekeeping-agent:
+  housekeeping-agent:
     image: swarmlibs/promstack-housekeeping-agent
     volumes:
       - type: bind
