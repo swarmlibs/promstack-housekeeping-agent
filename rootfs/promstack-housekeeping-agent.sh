@@ -11,6 +11,19 @@ logfmt_oneline() {
 	echo -n "ts=\"$(date +'%Y-%m-%dT%H:%M:%S%z')\" $*"
 }
 
+function docker_config_prune() {
+	local filter=$1
+	for cid in $(docker config ls -q --filter=label=${filter}); do
+		logfmt_oneline 'msg="Perform housekeeping on Docker config object"' 'filter="label='${filter}'"' 'id="'$cid'"'
+		if docker config rm $cid > /dev/null 2>&1; then
+			echo ' status="removed"'
+		else
+			echo ' status="skipped"'
+		fi
+		sleep 0.2
+	done
+}
+
 logfmt 'msg="Starting Promstack housekeeping agent..."'
 
 exec 2>&1
@@ -21,63 +34,12 @@ while true; do
 
 	count=0
 
-	# Promstask
-	for cid in $(docker config ls -q --filter=label=com.docker.stack.namespace=${DOCKER_STACK_NAMESPACE}); do
-		logfmt_oneline 'msg="Perform housekeeping on Docker config object"' 'filter="label=com.docker.stack.namespace='${DOCKER_STACK_NAMESPACE}'"' 'id="'$cid'"'
-		if docker config rm $cid > /dev/null 2>&1; then
-			echo ' status="removed"'
-		else
-			echo ' status="skipped"'
-		fi
-	done
-
-	# Prometheus
-	for cid in $(docker config ls -q --filter=label=io.prometheus.scrape_config=true); do
-		logfmt_oneline 'msg="Perform housekeeping on Docker config object"' 'filter="label=io.prometheus.scrape_config=true"' 'id="'$cid'"'
-		if docker config rm $cid > /dev/null 2>&1; then
-			echo ' status="removed"'
-			count=$((count+1))
-		else
-			echo ' status="skipped"'
-		fi
-	done
-
-	# Grafana
-	for cid in $(docker config ls -q --filter=label=io.grafana.dashboard=true); do
-		logfmt_oneline 'msg="Perform housekeeping on Docker config object"' 'filter="label=io.grafana.dashboard=true"' 'id="'$cid'"'
-		if docker config rm $cid > /dev/null 2>&1; then
-			echo ' status="removed"'
-			count=$((count+1))
-		else
-			echo ' status="skipped"'
-		fi
-	done
-	for cid in $(docker config ls -q --filter=label=io.grafana.provisioning.alerting=true); do
-		logfmt_oneline 'msg="Perform housekeeping on Docker config object"' 'filter="label=io.grafana.provisioning.alerting=true"' 'id="'$cid'"'
-		if docker config rm $cid > /dev/null 2>&1; then
-			echo ' status="removed"'
-			count=$((count+1))
-		else
-			echo ' status="skipped"'
-		fi
-	done
-	for cid in $(docker config ls -q --filter=label=io.grafana.provisioning.dashboard=true); do
-		logfmt_oneline 'msg="Perform housekeeping on Docker config object"' 'filter="label=io.grafana.provisioning.dashboard=true"' 'id="'$cid'"'
-		if docker config rm $cid > /dev/null 2>&1; then
-			echo ' status="removed"'
-			count=$((count+1))
-		else
-			echo ' status="skipped"'
-		fi
-	done
-	for cid in $(docker config ls -q --filter=label=io.grafana.provisioning.datasource=true); do
-		logfmt_oneline 'msg="Perform housekeeping on Docker config object"' 'filter="label=io.grafana.provisioning.datasource=true"' 'id="'$cid'"'
-		if docker config rm $cid > /dev/null 2>&1; then
-			echo ' status="removed"'
-		else
-			echo ' status="skipped"'
-		fi
-	done
+	docker_config_prune "com.docker.stack.namespace=${DOCKER_STACK_NAMESPACE}"
+	docker_config_prune "io.prometheus.scrape_config=true"
+	docker_config_prune "io.grafana.dashboard=true"
+	docker_config_prune "io.grafana.provisioning.alerting=true"
+	docker_config_prune "io.grafana.provisioning.dashboard=true"
+	docker_config_prune "io.grafana.provisioning.datasource=true"
 
 	if [ $count -gt 0 ]; then
 		logfmt 'msg="Housekeeping done, removed '${count}' Docker config objects."'
