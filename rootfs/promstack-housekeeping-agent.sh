@@ -23,7 +23,7 @@ function docker_config_prune() {
 		if docker config rm $cid > /dev/null 2>&1; then
 			logfmt 'msg="Perform housekeeping on Docker config object"' 'filter="label='${filter}'"' 'id="'$cid'"' 'status="removed"'
 		else
-			logfmt_debug 'msg="Perform housekeeping on Docker config object"' 'filter="label='${filter}'"' 'id="'$cid'"' 'status="removed"'
+			logfmt_debug 'msg="Perform housekeeping on Docker config object"' 'filter="label='${filter}'"' 'id="'$cid'"' 'status="skipped"'
 		fi
 		sleep 0.1
 	done
