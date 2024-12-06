@@ -29,6 +29,8 @@ function docker_config_prune() {
 	done
 }
 
+trap 'exit 0' SIGTERM SIGINT
+
 exec 2>&1
 
 if [ "$(docker node inspect self --format '{{.ManagerStatus.Leader}}')" != "true" ]; then
