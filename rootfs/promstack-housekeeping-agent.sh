@@ -21,13 +21,12 @@ logfmt_oneline() {
 function docker_config_prune() {
 	local filter=$1
 	for cid in $(docker config ls -q --filter=label=${filter}); do
-		if [[ " ${WHITELIST_CONFIGS[@]} " =~ " ${cid} " ]]; then
-			logfmt_debug 'msg="Skip the housekeeping task on the Docker config object"' 'filter="label='${filter}'"' 'id="'$cid'"' 'status="in-used"'
-			continue
-		fi
-
 		local cname=$(docker config inspect $cid --format '{{.Spec.Name}}')
 
+		if [[ " ${WHITELIST_CONFIGS[@]} " =~ " ${cid} " ]]; then
+			logfmt_debug 'msg="Perform housekeeping on Docker config object"' 'filter="label='${filter}'"' 'id="'$cid'"' 'name="'$cname'"' 'status="in-used"'
+			continue
+		fi
 		if docker config rm $cid > /dev/null 2>&1; then
 			logfmt 'msg="Perform housekeeping on Docker config object"' 'filter="label='${filter}'"' 'id="'$cid'"' 'name="'$cname'"' 'status="removed"'
 		else
